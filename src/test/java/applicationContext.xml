@@ -1,0 +1,54 @@
+<beans xmlns="http://www.springframework.org/schema/beans" 
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+		xmlns:aop="http://www.springframework.org/schema/aop" 
+		xmlns:context="http://www.springframework.org/schema/context" 
+		xmlns:task="http://www.springframework.org/schema/task" 
+		xsi:schemaLocation="http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context-3.0.xsd 
+		http://www.springframework.org/schema/aop 
+		http://www.springframework.org/schema/aop/spring-aop.xsd 
+		http://www.springframework.org/schema/util
+		http://www.springframework.org/schema/util/spring-util-3.0.xsd
+		http://www.springframework.org/schema/task 
+		http://www.springframework.org/schema/task/spring-task-3.0.xsd">
+    
+    <context:component-scan base-package="com.tcl.configservice.*"/>
+    
+    <bean id="zkClient" class="org.I0Itec.zkclient.ZkClient">
+    	<constructor-arg name="zkServers" value="localhost:2181"/>
+    	<constructor-arg name="sessionTimeout" value="10000"/>
+    	<constructor-arg name="connectionTimeout" value="3000"/>
+    	<constructor-arg name="zkSerializer" ref="defaultSerializer"/>
+    </bean>
+    
+    <bean id="defaultSerializer" class="com.tcl.configservice.serializer.DefaultSerializer"/>
+    
+    <bean class="com.tcl.configservice.ConfigInstantiationAwareBeanPostProcessor"/>
+    
+    <bean id="zkWatch" class="com.tcl.configservice.ZookeeperWatch" init-method="init">
+    	<property name="zkClient" ref="zkClient"/>
+    	<property name="namespace" value="test"/>
+    </bean>
+    <bean class ="com.tcl.configservice.TestBean" init-method="start"/>
+    	
+
+    <!-- <bean class ="com.tcl.configservice.InitConfigData">
+    	<property name="zkWatch" ref="zkWatch"/>
+    </bean> -->
+    
+    <bean class="com.tcl.configservice.manager.ZkConfigManager">
+    	<property name="zkClient" ref="zkClient"/>
+    </bean>
+    
+    <bean class="com.tcl.configservice.spring.ConfigPropertyPlaceholderConfigurer" 
+    	 depends-on="zkWatch">
+    	<property name="locations">
+    		<list>
+    	     <value>common.properties</value>
+    		</list>
+    	</property>
+    </bean>
+    <bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor"/>
+</beans>

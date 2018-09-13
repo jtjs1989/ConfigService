@@ -1,0 +1,49 @@
+
+apply plugin: 'maven'
+apply plugin: 'signing'
+group = "com.tcl.config"
+version = '1.0.0'
+signing {
+    required { gradle.taskGraph.hasTask("uploadArchives") }
+    sign configurations.archives
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from 'build/docs/javadoc'
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+artifacts {
+    archives jar
+    archives sourcesJar
+}
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            //为Pom文件做数字签名
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            //指定项目部署到的中央库地址，UserName和Password就是Part 1中注册的账号。
+            repository(url: "http://maven.my7v.com/nexus/content/repositories/releases") {
+                authentication(userName: 'dev', password: 'FFalcon_Dev#180531')
+            }
+            pom.project {
+                name project.name
+                packaging 'jar'
+                description ''
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'tcl-nexus'
+                    }
+                }
+              
+            }
+        }
+    }
+}
